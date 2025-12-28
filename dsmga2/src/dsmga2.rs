@@ -22,42 +22,35 @@ struct MixingResult {
 
 /// DSMGA-II with two-edge graphical linkage model
 pub struct Dsmga2<'a> {
-    // Problem configuration (public for API access)
     problem_size: usize,
     fitness_fn: &'a dyn FitnessFunction,
 
-    // Population (private internals)
     population: Vec<Chromosome>,
     population_size: usize,
 
-    // Algorithm state (private internals)
     generation: usize,
     num_evaluations: AtomicUsize,
     best_index: usize,
 
-    // Configuration (private internals)
     max_generations: Option<usize>,
     max_evaluations: Option<usize>,
     selection_pressure: usize,
     use_ghc: bool,
     ghc_patience: Option<usize>,
 
-    // Linkage learning structures (private internals)
     linkage_graph: TriMatrix,
     linkage_graph_size: TriMatrix,
     fast_counting: Vec<FastCounting>,
 
-    // Utilities (private internals)
     zobrist: ZobristKeys,
     rng: Mt,
     population_hash: DashMap<u64, f64>,
     statistics: Statistics,
 
-    // Selection indices (private internals)
     selection_indices: Vec<usize>,
     population_order: Vec<usize>,
 
-    // Convergence tracking (private internals, atomic for thread-safety)
+    // Atomic for thread-safety in parallel operations
     converge_count: AtomicUsize,
     last_max: AtomicU64,
     last_mean: AtomicU64,
@@ -297,9 +290,8 @@ impl<'a> Dsmga2<'a> {
                 );
             });
 
-        // NOTE: Different from C++ - we update pHash after GHC
-        // C++ has a bug where it does not update pHash here, leading to stale hash entries
-        // We do the correct thing and update the hash after chromosomes are modified by GHC
+        // Update population hash after GHC to ensure consistency
+        // GHC modifies chromosomes, so their hash keys must be refreshed
         self.population_hash.clear();
         for chromosome in &self.population {
             if let Some(fitness) = chromosome.fitness() {
@@ -307,8 +299,7 @@ impl<'a> Dsmga2<'a> {
             }
         }
 
-        // NOTE: Same as C++ - GHC evaluations are NOT counted in main nfe
-        // C++ tracks them separately in lsnfe
+        // GHC evaluations are tracked separately and not included in the main evaluation count
     }
 
     /// Set whether to use Greedy Hill Climbing (default: true)
@@ -352,14 +343,13 @@ impl<'a> Dsmga2<'a> {
             return true;
         }
 
-        // Population converged (all individuals have similar fitness)
-        // C++: if (stFitness.getMax() - EPSILON <= stFitness.getMean()) termination = true;
+        // Terminate if population has converged (fitness variance near zero)
         if self.statistics.max() - EPSILON <= self.statistics.mean() {
             return true;
         }
 
-        // Slow convergence check (matching C++ logic: max/mean/min unchanged for >300 generations)
-        // Note: This is rarely reached due to the faster check above
+        // Terminate if fitness statistics remain unchanged for many generations
+        // This catches slow convergence that the variance check might miss
         if self.converged() {
             return true;
         }
@@ -631,7 +621,7 @@ impl<'a> Dsmga2<'a> {
         let mut gene_order: Vec<usize> = (0..self.problem_size).collect();
         gene_order.shuffle(rng);
 
-        // Add start gene to mask, others to rest (more idiomatic)
+        // Initialize mask with start gene, remaining genes go to rest set
         mask.push(start_gene);
         for &gene in gene_order.iter().filter(|&&g| g != start_gene) {
             rest.insert(gene);
@@ -654,7 +644,7 @@ impl<'a> Dsmga2<'a> {
 
         // Greedily add genes with strongest linkage
         while !rest.is_empty() {
-            // Find gene with max connection (idiomatic Rust)
+            // Select gene with strongest connection
             let best_gene = rest
                 .iter()
                 .max_by(|&a, &b| connections[a].partial_cmp(&connections[b]).unwrap())
@@ -694,7 +684,7 @@ impl<'a> Dsmga2<'a> {
         let mut mask_size = SmallVec::<[usize; 64]>::new();
         let mut rest = SimpleSet::new(self.problem_size);
 
-        // Add start_gene to mask, others to rest (more idiomatic)
+        // Initialize mask with start gene, remaining genes go to rest set
         mask_size.push(start_gene);
         for gene in (0..self.problem_size).filter(|&g| g != start_gene) {
             rest.insert(gene);
@@ -720,7 +710,7 @@ impl<'a> Dsmga2<'a> {
         while !rest.is_empty() && bound > 0 {
             bound -= 1;
 
-            // Find gene with max connection (idiomatic Rust)
+            // Select gene with strongest connection
             let best_gene = rest
                 .iter()
                 .max_by(|&a, &b| connections[a].partial_cmp(&connections[b]).unwrap())
@@ -768,7 +758,6 @@ impl<'a> Dsmga2<'a> {
                 candidates.remove(idx);
             }
 
-            // C++: check isEmpty BEFORE incrementing size
             if candidates.is_empty() {
                 break;
             }
@@ -781,7 +770,6 @@ impl<'a> Dsmga2<'a> {
 
     /// Restricted mixing: compute mixing result without modifying state
     fn compute_mixing(&self, chromosome_idx: usize, rng: &mut Mt) -> MixingResult {
-        // Match C++ line 295: int startNode = myRand.uniformInt(0, ell - 1);
         let start_gene = rng.uniform_int(0, self.problem_size - 1);
 
         // Build mask
@@ -808,27 +796,24 @@ impl<'a> Dsmga2<'a> {
             .expect("Chromosome should have cached fitness");
         let mut evaluations = 0;
 
-        // C++ line 448: for (size_t ub = 1; ub <= mask.size(); ++ub)
         // Try each mask size from 1 to mask.len()
         for ub in 1..=mask.len() {
-            // C++ line 451: trial = ch; (fresh copy for each ub)
             let mut trial = self.population[chromosome_idx].clone();
 
-            // C++ line 455: flip first ub genes in mask
+            // Flip first ub genes in mask
             for &gene in mask.iter().take(ub) {
                 trial.flip_gene(gene, &self.zobrist);
             }
 
-            // C++ line 478: if (isInP(trial)) break;
+            // Skip if trial already exists in population
             if self.population_hash.contains_key(&trial.key()) {
                 break;
             }
 
-            // C++ line 484: evaluate and check acceptance
+            // Evaluate and check for improvement
             evaluations += 1;
             let trial_fitness = trial.evaluate(self.fitness_fn);
 
-            // C++ line 488: if (trial.getFitness() >= ch.getFitness() - EPSILON)
             if trial_fitness >= original_fitness - EPSILON {
                 // Return success result
                 return MixingResult {
@@ -916,7 +901,6 @@ impl<'a> Dsmga2<'a> {
         }
     }
 
-    // Getters
     pub fn generation(&self) -> usize {
         self.generation
     }
@@ -962,15 +946,14 @@ impl<'a> Dsmga2<'a> {
     ///
     /// Returns edges in the linkage graph as (gene_i, gene_j, weight) tuples.
     pub fn linkage(&self) -> Vec<(usize, usize, f64)> {
-        let mut edges = Vec::new();
-        for i in 0..self.problem_size {
-            for j in (i + 1)..self.problem_size {
-                let (weight, _) = self.linkage_graph.read(i, j);
-                if weight > 0.0 {
-                    edges.push((i, j, weight));
-                }
-            }
-        }
+        let mut edges: Vec<(usize, usize, f64)> = (0..self.problem_size)
+            .flat_map(|i| {
+                ((i + 1)..self.problem_size).filter_map(move |j| {
+                    let (weight, _) = self.linkage_graph.read(i, j);
+                    (weight > 0.0).then_some((i, j, weight))
+                })
+            })
+            .collect();
         // Sort by weight descending
         edges.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
         edges
@@ -993,10 +976,9 @@ impl<'a> Dsmga2<'a> {
         }
 
         let chr = &self.population[index];
-        let mut bits = String::with_capacity(chr.length());
-        for i in 0..chr.length() {
-            bits.push(if chr.get_gene(i) { '1' } else { '0' });
-        }
+        let bits: String = (0..chr.length())
+            .map(|i| if chr.get_gene(i) { '1' } else { '0' })
+            .collect();
         Some(bits)
     }
 

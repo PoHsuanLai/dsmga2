@@ -37,22 +37,16 @@ impl FitnessFunction for MkTrap {
         );
 
         let num_blocks = length / self.k;
-        let mut fitness = 0.0;
 
-        for block in 0..num_blocks {
-            let start = block * self.k;
-            let mut ones = 0;
-
-            for i in start..(start + self.k) {
-                if chromosome.get_gene(i) {
-                    ones += 1;
-                }
-            }
-
-            fitness += self.trap_function(ones);
-        }
-
-        fitness
+        (0..num_blocks)
+            .map(|block| {
+                let start = block * self.k;
+                let ones = (start..(start + self.k))
+                    .filter(|&i| chromosome.get_gene(i))
+                    .count();
+                self.trap_function(ones)
+            })
+            .sum()
     }
 
     fn optimum(&self, length: usize) -> f64 {
@@ -87,22 +81,16 @@ impl FitnessFunction for FoldedTrap {
         );
 
         let num_blocks = length / Self::K;
-        let mut fitness = 0.0;
 
-        for block in 0..num_blocks {
-            let start = block * Self::K;
-            let mut ones = 0;
-
-            for i in start..(start + Self::K) {
-                if chromosome.get_gene(i) {
-                    ones += 1;
-                }
-            }
-
-            fitness += self.trap_function(ones);
-        }
-
-        fitness
+        (0..num_blocks)
+            .map(|block| {
+                let start = block * Self::K;
+                let ones = (start..(start + Self::K))
+                    .filter(|&i| chromosome.get_gene(i))
+                    .count();
+                self.trap_function(ones)
+            })
+            .sum()
     }
 
     fn optimum(&self, length: usize) -> f64 {
@@ -139,22 +127,19 @@ impl FitnessFunction for CyclicTrap {
     fn evaluate(&self, chromosome: &Chromosome) -> f64 {
         let length = chromosome.length();
         let step = self.k - 1; // Overlap by 1
-        let mut fitness = 0.0;
 
-        for block_start in (0..length).step_by(step) {
-            let mut ones = 0;
-
-            for offset in 0..self.k {
-                let index = (block_start + offset) % length;
-                if chromosome.get_gene(index) {
-                    ones += 1;
-                }
-            }
-
-            fitness += self.trap_function(ones);
-        }
-
-        fitness
+        (0..length)
+            .step_by(step)
+            .map(|block_start| {
+                let ones = (0..self.k)
+                    .filter(|&offset| {
+                        let index = (block_start + offset) % length;
+                        chromosome.get_gene(index)
+                    })
+                    .count();
+                self.trap_function(ones)
+            })
+            .sum()
     }
 
     fn optimum(&self, length: usize) -> f64 {

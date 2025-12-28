@@ -44,14 +44,10 @@ impl FastCounting {
     /// Optimized for compiler auto-vectorization
     #[inline]
     pub fn count_ones(&self) -> usize {
-        let mut count = 0;
-
-        // Manual loop helps compiler auto-vectorize better
-        for &word in &self.genes {
-            count += word.count_ones() as usize;
-        }
-
-        count
+        self.genes
+            .iter()
+            .map(|&word| word.count_ones() as usize)
+            .sum()
     }
 
     /// Count XOR differences with another FastCounting

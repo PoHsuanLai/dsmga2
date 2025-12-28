@@ -49,11 +49,10 @@ impl Chromosome {
         let length = bits.len();
         let mut chromosome = Self::new(length, zobrist);
 
-        for (i, &bit) in bits.iter().enumerate() {
-            if bit {
-                chromosome.set_gene(i, true, zobrist);
-            }
-        }
+        bits.iter()
+            .enumerate()
+            .filter(|(_, &bit)| bit)
+            .for_each(|(i, _)| chromosome.set_gene(i, true, zobrist));
 
         chromosome
     }
