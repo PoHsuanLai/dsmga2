@@ -1,0 +1,16 @@
+[package]
+name = "dsmga2-py"
+version.workspace = true
+edition = "2021"
+authors = ["Po-Hsuan Lai"]
+description = "Python bindings for DSMGA2"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "dsmga2_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+dsmga2 = { path = "../dsmga2" }
+pyo3 = { version = "0.20", features = ["extension-module"] }
+numpy = "0.20"

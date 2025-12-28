@@ -1,0 +1,45 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "dsmga2"
+version = "0.1.0"
+description = "Dependency Structure Matrix Genetic Algorithm II - A fast genetic algorithm with linkage learning"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT OR Apache-2.0" }
+authors = [
+    { name = "Po-Hsuan Lai" }
+]
+keywords = ["genetic-algorithm", "optimization", "evolutionary-computation", "linkage-learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"
+module-name = "dsmga2._dsmga2"
+
+# Exclude unnecessary files from PyPI package
+exclude = [
+    "examples/",
+    "../benchmarks/",
+    "../dsmga2/benches/",
+    "../DSMGA-II-TwoEdge/",
+    "*.pyc",
+    "__pycache__/",
+]
