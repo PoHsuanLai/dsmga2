@@ -119,7 +119,8 @@ jobs:
       - name: Build and test Python package
         run: |
           cd dsmga2-py
-          maturin develop --release
+          maturin build --release
+          pip install --force-reinstall ../target/wheels/dsmga2-*.whl
           python -c "import dsmga2; print('Python bindings imported successfully')"
 
   docs:

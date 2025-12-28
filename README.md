@@ -1,5 +1,6 @@
 # DSMGA2
 
+[![CI](https://github.com/PoHsuanLai/dsmga2/workflows/CI/badge.svg)](https://github.com/PoHsuanLai/dsmga2/actions)
 [![Crates.io](https://img.shields.io/crates/v/dsmga2.svg)](https://crates.io/crates/dsmga2)
 [![Documentation](https://docs.rs/dsmga2/badge.svg)](https://docs.rs/dsmga2)
 [![PyPI](https://img.shields.io/pypi/v/dsmga2.svg)](https://pypi.org/project/dsmga2/)

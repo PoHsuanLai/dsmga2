@@ -17,10 +17,10 @@ const INITIAL_STEP: usize = 30;
 
 #[derive(Debug, Clone)]
 struct Record {
-    n: usize,           // Population size
-    nfe: f64,           // Mean number of fitness evaluations
-    gen: f64,           // Mean generations
-    success: bool,      // Whether all trials succeeded
+    n: usize,      // Population size
+    nfe: f64,      // Mean number of fitness evaluations
+    gen: f64,      // Mean generations
+    success: bool, // Whether all trials succeeded
 }
 
 impl Record {

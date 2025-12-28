@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["Po-Hsuan Lai"]
 description = "Python bindings for DSMGA2"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/PoHsuanLai/dsmga2"
+documentation = "https://docs.rs/dsmga2"
+homepage = "https://github.com/PoHsuanLai/dsmga2"
 
 [lib]
 name = "dsmga2_py"

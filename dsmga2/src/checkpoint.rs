@@ -69,10 +69,11 @@ mod tests {
             use_ghc: true,
         };
 
-        let path = "/tmp/test_checkpoint_full.bin";
-        checkpoint.save(path).unwrap();
+        let temp_dir = std::env::temp_dir();
+        let path = temp_dir.join("test_checkpoint_full.bin");
+        checkpoint.save(&path).unwrap();
 
-        let loaded = Checkpoint::load(path).unwrap();
+        let loaded = Checkpoint::load(&path).unwrap();
         assert_eq!(loaded.problem_size, 3);
         assert_eq!(loaded.population_size, 2);
         assert_eq!(loaded.generation, 42);
@@ -81,6 +82,6 @@ mod tests {
         assert_eq!(loaded.population.len(), 2);
         assert_eq!(loaded.fitness_values, vec![2.0, 1.0]);
 
-        fs::remove_file(path).ok();
+        fs::remove_file(&path).ok();
     }
 }
