@@ -98,7 +98,7 @@ fn bisection_sweep(
     initial_pop: usize,
     show_bisection: bool,
 ) -> Record {
-    let mut step = INITIAL_STEP;
+    let step = INITIAL_STEP;
 
     // Phase 1: Test 3 initial population sizes
     if show_bisection {
@@ -130,7 +130,6 @@ fn bisection_sweep(
     while rec[0].nfe < rec[1].nfe && ((rec[2].n - rec[0].n) * 20 > rec[1].n) {
         rec[2] = rec[1].clone();
         rec[1].n = (rec[0].n + rec[2].n) / 2;
-        step /= 2;
 
         rec[1] = run_trials(
             problem_size,

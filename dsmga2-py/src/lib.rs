@@ -1,3 +1,5 @@
+#![allow(non_local_definitions)]
+
 use dsmga2::{Chromosome, FitnessFunction};
 use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
