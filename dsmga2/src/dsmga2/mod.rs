@@ -223,10 +223,6 @@ impl<'a> Dsmga2<'a> {
         false
     }
 
-    /// Wrapper for RNG uniform_int
-    pub fn uniform_int(&mut self, a: usize, b: usize) -> usize {
-        self.rng.uniform_int(a, b)
-    }
 
     /// Perform mixing operations
     fn mixing(&mut self) {
@@ -391,33 +387,16 @@ impl<'a> Dsmga2<'a> {
         self.linkage.get_linkage_edges(self.config.problem_size)
     }
 
-    pub fn get_population_fitness(&self) -> Vec<(usize, f64)> {
-        self.population.get_fitness_values()
-    }
-
-    pub fn get_chromosome_bits(&self, index: usize) -> Option<String> {
-        self.population.get_chromosome_bits(index)
-    }
-
     pub fn best_solution(&self) -> &Chromosome {
         self.population.best()
     }
 
-    pub fn get_linkage(&self, i: usize, j: usize) -> (f64, f64) {
-        self.linkage.graph.read(i, j)
+    // Internal methods used by api.rs for checkpointing
+    pub(crate) fn get_population_fitness(&self) -> Vec<(usize, f64)> {
+        self.population.get_fitness_values()
     }
 
-    pub fn get_selection_indices(&self) -> &[usize] {
-        &self.buffers.indices
-    }
-
-    pub fn debug_tournament_selection(&mut self) {
-        selection::tournament_selection(
-            &mut self.population.chromosomes,
-            self.config.selection_pressure,
-            self.fitness_fn,
-            &mut self.buffers,
-            &mut self.rng,
-        );
+    pub(crate) fn get_chromosome_bits(&self, index: usize) -> Option<String> {
+        self.population.get_chromosome_bits(index)
     }
 }

@@ -10,7 +10,7 @@ documentation = "https://docs.rs/dsmga2"
 homepage = "https://github.com/PoHsuanLai/dsmga2"
 keywords = ["genetic-algorithm", "optimization", "evolutionary", "linkage", "ga"]
 categories = ["algorithms", "science"]
-readme = "../README.md"
+readme = "README.md"
 exclude = [
     "benches/",
     "../benchmarks/",
