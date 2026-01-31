@@ -223,7 +223,6 @@ impl<'a> Dsmga2<'a> {
         false
     }
 
-
     /// Perform mixing operations
     fn mixing(&mut self) {
         // Tournament selection
