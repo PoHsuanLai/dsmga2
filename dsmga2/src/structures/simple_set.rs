@@ -46,11 +46,33 @@ impl SimpleSet {
     }
 
     /// Iterator over elements in the set
-    pub fn iter(&self) -> impl Iterator<Item = usize> + '_ {
-        self.present
-            .iter()
-            .enumerate()
-            .filter_map(|(i, &present)| if present { Some(i) } else { None })
+    pub fn iter(&self) -> SimpleSetIter<'_> {
+        SimpleSetIter {
+            iter: self.present.iter().enumerate(),
+        }
+    }
+}
+
+/// Iterator over elements in a SimpleSet
+pub struct SimpleSetIter<'a> {
+    iter: std::iter::Enumerate<std::slice::Iter<'a, bool>>,
+}
+
+impl<'a> Iterator for SimpleSetIter<'a> {
+    type Item = usize;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.iter
+            .find_map(|(i, &present)| if present { Some(i) } else { None })
+    }
+}
+
+impl<'a> IntoIterator for &'a SimpleSet {
+    type Item = usize;
+    type IntoIter = SimpleSetIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
@@ -79,5 +101,16 @@ mod tests {
 
         let elements: Vec<usize> = set.iter().collect();
         assert_eq!(elements, vec![1, 3]);
+
+        // Test IntoIterator trait
+        let elements_via_trait: Vec<usize> = (&set).into_iter().collect();
+        assert_eq!(elements_via_trait, vec![1, 3]);
+
+        // Test for loop (uses IntoIterator)
+        let mut count = 0;
+        for _ in &set {
+            count += 1;
+        }
+        assert_eq!(count, 2);
     }
 }

@@ -42,7 +42,7 @@ pub(crate) fn find_mask(
     // Build connection scores
     let mut connections = vec![0.0; problem_size];
 
-    for gene in rest.iter() {
+    for gene in &rest {
         let (linkage_same, linkage_diff) = linkage_graph.read(start_gene, gene);
         let start_val = chromosome.get_gene(start_gene);
         let gene_val = chromosome.get_gene(gene);
@@ -57,8 +57,8 @@ pub(crate) fn find_mask(
     // Greedily add genes with strongest linkage
     while !rest.is_empty() {
         // Select gene with strongest connection
-        let best_gene = rest
-            .iter()
+        let best_gene = (&rest)
+            .into_iter()
             .max_by(|&a, &b| connections[a].partial_cmp(&connections[b]).unwrap())
             .expect("rest is not empty");
 
@@ -66,7 +66,7 @@ pub(crate) fn find_mask(
         mask.push(best_gene);
 
         // Update connections for remaining genes
-        for gene in rest.iter() {
+        for gene in &rest {
             let (linkage_same, linkage_diff) = linkage_graph.read(best_gene, gene);
             let best_val = chromosome.get_gene(best_gene);
             let gene_val = chromosome.get_gene(gene);
@@ -103,7 +103,7 @@ pub(crate) fn find_size_bound(
     let mut connections = vec![0.0; problem_size];
 
     // Initialize connections with linkage to start_gene
-    for gene in rest.iter() {
+    for gene in &rest {
         let (linkage_same, linkage_diff) = linkage_graph_size.read(start_gene, gene);
         let start_val = chromosome.get_gene(start_gene);
         let gene_val = chromosome.get_gene(gene);
@@ -121,8 +121,8 @@ pub(crate) fn find_size_bound(
         bound -= 1;
 
         // Select gene with strongest connection
-        let best_gene = rest
-            .iter()
+        let best_gene = (&rest)
+            .into_iter()
             .max_by(|&a, &b| connections[a].partial_cmp(&connections[b]).unwrap())
             .expect("rest is not empty");
 
@@ -130,7 +130,7 @@ pub(crate) fn find_size_bound(
         mask_size.push(best_gene);
 
         // Update connections with linkage to newly added gene
-        for gene in rest.iter() {
+        for gene in &rest {
             let (linkage_same, linkage_diff) = linkage_graph_size.read(best_gene, gene);
             let best_val = chromosome.get_gene(best_gene);
             let gene_val = chromosome.get_gene(gene);
@@ -162,8 +162,8 @@ pub(crate) fn calculate_mask_size(
         let allele = chromosome.get_gene(gene);
 
         // Collect indices to remove
-        let to_remove: Vec<usize> = candidates
-            .iter()
+        let to_remove: Vec<usize> = (&candidates)
+            .into_iter()
             .filter(|&idx| population[idx].get_gene(gene) == allele)
             .collect();
 
